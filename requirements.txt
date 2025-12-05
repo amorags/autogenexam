@@ -4,3 +4,10 @@ ollama==0.3.3
 fix-busted-json==0.0.18
 python-dotenv>=1.0.0
 requests>=2.31.0
+
+# Search tool dependencies
+duckduckgo-search>=6.1.0
+
+# Chart tool dependencies
+matplotlib>=3.8.0
+numpy>=1.24.0
