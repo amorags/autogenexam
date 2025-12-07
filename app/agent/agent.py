@@ -1,71 +1,10 @@
 # agent.py
-import os
-import json
-import pandas as pd
 from app.agent.config import LLM_CONFIG
 from typing import Dict
 from autogen import AssistantAgent, UserProxyAgent, GroupChat, GroupChatManager
+from app.tools.load_tool import load_csv
+from app.tools.fetch_tool import fetch_stock
 from app.tools.chart_tool import create_chart
-
-# Optional: yfinance for stock data (no API key required)
-try:
-    import yfinance as yf
-    YFINANCE_AVAILABLE = True
-except Exception:
-    YFINANCE_AVAILABLE = False
-
-# ----------------------------
-# Tools
-# ----------------------------
-
-def load_csv(filename: str) -> str:
-    """
-    Load CSV from input/filename and return JSON describing columns and data.
-    """
-    try:
-        input_path = os.path.join("input", filename)
-        if not os.path.exists(input_path):
-            return json.dumps({"error": f"File '{filename}' not found in input/ folder."})
-
-        df = pd.read_csv(input_path)
-        return json.dumps({
-            "source": "csv",
-            "filename": filename,
-            "columns": list(df.columns),
-            "data": df.to_dict(orient="list")
-        })
-    except Exception as e:
-        return json.dumps({"error": str(e)})
-
-
-def fetch_stock(ticker: str, start: str = None, end: str = None) -> str:
-    """
-    Download historical stock data using yfinance and return JSON.
-    start/end are 'YYYY-MM-DD' strings (optional).
-    """
-    if not YFINANCE_AVAILABLE:
-        return json.dumps({"error": "yfinance not installed or failed to import."})
-    try:
-        # yfinance .download returns a DataFrame with DatetimeIndex
-        df = yf.download(ticker, start=start, end=end, progress=False, auto_adjust=False)
-        if df.empty:
-            return json.dumps({"error": f"No data returned for ticker {ticker}."})
-        if isinstance(df.columns, pd.MultiIndex):
-                # We take the last level, which usually contains the column name (Open, Close, etc.)
-                df.columns = df.columns.get_level_values(-1)
-            # 2. Rename columns to ensure they are clean strings for the chart agent
-        df.columns = [col.replace(' ', '_') for col in df.columns]# Keep the index as a 'date' column
-        df = df.reset_index()
-        # Convert Timestamp to string for JSON serialization
-        df['Date'] = df['Date'].dt.strftime("%Y-%m-%d")
-        return json.dumps({
-            "source": "yfinance",
-            "ticker": ticker,
-            "columns": list(df.columns),
-            "data": df.to_dict(orient="list")
-        })
-    except Exception as e:
-        return json.dumps({"error": str(e)})
 
 # ----------------------------
 # Agents
@@ -192,7 +131,7 @@ def run(user_request: str):
 
 if __name__ == "__main__":
     # demo prompt (assignment example)
-    prompt = "Show a line chart of the adjusted closing price of META from 2023-01-01 to 2023-01-31."
+    prompt = "Show a line chart of the adjusted closing price of APPLE from 2023-01-01 to 2023-01-31."
     print("Running demo prompt:\n", prompt)
     result = run(prompt)
     print("Final result:\n", result)
