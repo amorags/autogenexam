@@ -1,6 +1,9 @@
 ### introduction
 
+
 this project uses python 3.12 so you have to make a py -3.12 venv. 
+
+for the LLM config it uses Llama 3.1 using Ollama
 
 it produces charts based on data inputs that it can either pull from yahoo finance using the 
 yfinance library. or from a csv file in the input folder. 
